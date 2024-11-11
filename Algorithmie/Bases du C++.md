@@ -1,6 +1,6 @@
 # Bases du C++
 
-<span style="color: gray">_Écrit par Léo Lewandowski_</span>
+<font color="gray">_Écrit par Léo Lewandowski_</font>
 
 > [!IMPORTANT]
 > Ce document C++ est donné pour toute version >= C++23
@@ -22,25 +22,178 @@ Pour simplifier ce document (cours ? tutoriel ?), je vais partir du principe que
 
 Pour ce premier document, je vais reprendre les points donnés dans le document donné par le prof [[1]](#cours), en tentant de les expliquer un peu mieux
 
-> [!WARNING]
+> [!NOTE]
 > Je vais utiliser beaucoup les termes "constante" et "variable" dans ce document, donc pour mettre au clair :
 > 
 > - Une _variable_ peut changer
 > - Une _constante_ ne peut pas changer
 >
-> Outre cette différence, elles sont exactement pareilles
+> Outre cette différence, une constante _est_ une variable "spéciale"\
+> Ainsi, je dirais "variable" pour parler des variables ***et*** des constantes, sauf mention contraire
 
-Ce document est déjà beaucoup trop long, alors rentrons dans le vif du sujet !
+Le début de ce document est déjà beaucoup trop long, alors rentrons dans le vif du sujet !
 
-## Modificateurs
+## Nouveau types
 
+Le C++ introduit le système des `class` qui rajoute beaucoup de libertés aux programmeurs, mais a aussi quelques nouveaux types par rapport au C :
 
+### Type `bool`
+
+Un `bool` est une valeur booléenne, c'est à dire vraie ou fausse.\
+Une variable booléenne ne peut être comparée qu'à 2 valeurs : `true` (vrai) ou `false` (faux)\
+Tenter de comparer un `bool` à une variable d'un autre type renverra ainsi une erreur
+
+Cependant, faire un cast de type à une valeur booléenne est possible, avec les types classiques ! (`char`, `int`, etc.)
+- `false` deviendra `0`
+- `true` deviendra `1`
+
+Inversement, des casts de type sont possibles vers `bool` :
+- Une valeur de `0` deviendra `false`
+- N'importe quelle autre valeur deviendra `true` (même un nombre négatif !)
+
+> [!IMPORTANT]
+> Toutes les opérations ***relationnelles*** (`>`, `>=`, `<`, `<=`, `==`) ainsi que les opérateurs logiques (`&&`, `||`, `!`) renvoient un `bool` en C++
+
+Exemple :
+
+```cpp
+bool b = true;
+int n = 0;
+n = b; // Désormais, n == (int)true == 1
+
+b = false;
+n = -5;
+b = n; // Désormais, b == (bool)-5 == true
+
+std::cout << b == n; // Erreur : b et n sont de types différents
+
+std::cout << (int)b == n; // Comparaison possible
+                    // Affiche `false` : (int)true == 1 --> (int)true != n
+
+std::cout << b == (bool)n;  // Comparaison possible
+            // Affiche `true` : (bool)-5 == true --> b == (bool)-5
+```
+
+Tableau récapitulatif ligne par ligne :
+
+| Expression                  |   `b`   |  `n`  | Commentaire |
+| :-------------------------- | :-----: | :---: | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bool b = true`             | `true`  |       | `b` initialisé |
+| `int n = 0`                 | `true`  |  `0`  | `n` initialisé |
+| `n = b`                     | `true`  |  `1`  | `n` obtient la même valeur que `b`, mais transformée en `int` |
+| `b = false`                 | `false` |  `1`  | `b` devient faux |
+| `n = -5`                    | `false` | `-5`  | `n` devient -5 |
+| `b = n`                     | `true`  | `-5`  | `b` obtient la même valeur que `n`, mais transformée en `bool` |
+| `std::cout << b == n`       | `true`  |  `-5`  | Erreur : impossible de comparer deux variables de types différents |
+| `std::cout << (int)b == n`  | `true`  |  `-5`  | On compare `n` (un `int`) et la _valeur de `b`_ transformée en `int`. Les deux sont de même type et de valeurs différentes : comparaison possible et fausse |
+| `std::cout << b == (bool)n` | `true`  |  `-5`  | On compare `b` (un `bool`) et la _valeur de `n`_ transformée en `bool`. Les deux sont de même type et de même valeur : comparaison possible et vraie |
+
+### Type `auto`
+
+Le mot-clé `auto` est un peu spécial. Bien qu'il ne soit pas lui-même un type, il agit comme un mot-clé de type, et permet au programme de détecter le type d'une variable.
+
+Cela permet notamment de gagner du temps lors de la déclaration de variables ayant un type très long
+
+> [!IMPORTANT]
+> Comme `auto` détecte et assigne un type à une variable, cette variable ***doit*** être initialisée. Concrètement :
+> ```cpp
+> auto a = 5; // Valide : variable déclarée & initialisée
+> auto b; // Invalide : variable déclarée, mais non initializée
+> ```
+> Une variable n'est pas forcément initialisée avec un `=`, par exemple :
+> ```cpp
+> auto a { 5.7f } // a est désormais un `float`
+> ```
+
+## Références
+
+> [!IMPORTANT]
+> Les références ne sont _pas_ des pointeurs.\
+> Les pointeurs existent aussi en C++, mais ont un comportement un peu différent des références
+
+Les références sont un moyen, en C++, d'avoir accès à une variable spécifique, et de la modifier "à distance".\
+On peut les voir comme des "alias" à cette variable
+
+Les références ont 2 gros avantages sur les pointeurs :
+- Sûreté du code : une référence est liée à une variable _spécifique_, et non pas à un emplacement mémoire quelconque. Ainsi, aucune chance d'accéder à un emplacement de mémoire interdit et de faire planter le programme
+- Facilité d'utilisation : la référence se fait automatiquement, plus besoin d'utiliser `*` ou `&` comme avec les pointeurs (excepté lors de la déclaration)
+
+Pour déclarer une référence, c'est un peu comme un pointeur :
+```cpp
+type_t* pointeur = &variable; // Pointeur
+type_t& reference = variable; // Référence
+```
+
+> [!WARNING]
+> Une référence doit être _initialisée_ avec la variable pour laquelle elle sert d'alias. Plus concrètement :
+> ```cpp
+> type_t* pointeur; // Valable, un pointeur peut ne pas être initialisé
+> type_t& ref; // Erreur : Une référence DOIT être initialisée
+> ```
+
+Une référence agit comme un pointeur _implicite_, et a la même syntaxe qu'une variable. Ainsi, toute _opération_ effectuée sur une variable est aussi effectuable sur une référence :
+
+```cpp
+int n = 10;
+int& i = n;
+
+n++; // n == 11
+i++; // n == 12
+
+std::cout << i; // Affichera : 12
+
+i /= 2; // n == 12 / 2 == 6
+i = i % 5; // n == 6 % 5 == 1
+```
+
+Dans le cas où l'on a une référence d'une instance de classe, l'opérateur `.` est aussi utilisable :
+
+```cpp
+class classe_t {
+    public:
+        int x = 0;
+        int square(){ return this.x * this.x; }
+}
+
+classe_t obj(); // Nouvelle instance de classe
+classe_t& alias = obj; // Alias de `obj`
+
+std::cout << obj.x << " == " << alias.x;
+// Affiche : 0 == 0
+
+std::cout << alias.square();
+// Affiche : 25
+```
+
+### Passage par référence
+
+En C, on peut passer les paramètres d'une fonction soit par valeur, soit par adresse (avec des pointeurs).\
+En C++, on peut _aussi_ les passer par référence !\
+Cependant, contrairement aux pointeurs, aucun caractère spécial `&` ou `*` ne doit être ajouté pour passer un paramètre par référence
+
+Exemple : 
+```cpp
+int x = 1, y = 2, z = 3;
+
+int fonction1(int a, int* b, int& c){
+    a = 2 // a est une copie de x, x n'est pas modifié 
+    *b = 3 // b est un pointeur vers y, y est modifié
+    c = 5 // c est un alias vers z, z est modifié
+    return a + *b + c;
+}
+
+// Pendant la fonction : x non modifié, y et z modifiés
+int resultat = fonction1(x, &y, z);
+
+std::cout << x << "  " << y << "  " << z << " | " << resultat;
+// Affichera : 1  3  5 | 9
+```
 
 ## Expressions constantes
 
 Il y a 3 types d'expressions constantes. Ces expressions peuvent être des variables (appellées _constantes_ à la place de _variables_ du coup), ou des méthodes (fonctions)
 
-> [!IMPORTANT]
+> [!NOTE]
 > Aucun de ces modificateurs n'est un _type_. Ils servent juste à spécifier un certain "comportement" de la fonction ou la variable à laquelle ils sont appliqués\
 > Ces modificateurs peuvent d'ailleurs être ajoutés à n'importe quelle variable de (quasiment) n'importe quel type !
 
