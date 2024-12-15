@@ -68,7 +68,7 @@ public:
     {
         return vec_[ind];
     }
-    _T operator[](const size_t &ind) const // Accès pour un vecteur const
+    _T operator[](const size_t &ind) const // Accès pour un vecteur const (copie l'élément plutôt que de renvoyer une référence)
     {
         return vec_[ind];
     }
@@ -79,7 +79,7 @@ public:
         _T1 res(0);                        // Initialisation à 0 du résultat
         for (size_t i = 0; i < _SIZE; i++) // Itération à travers les éléments des 2 vecteurs
         {
-            res = res + static_cast<_T1>(vec_[i]) * v[i]; // Cast l'élément de ce vecteur dans le bon type, puis ajoute le deuxième élément
+            res = res + static_cast<_T1>(vec_[i]) * v[i]; // Cast l'élément de ce vecteur dans le bon type, puis multiplie par le deuxième élément
         }
         return res;
     }
@@ -105,7 +105,7 @@ template <typename T, size_t SIZE>
 std::ostream &operator<<(std::ostream &os, const My_vector<T, SIZE> &v)
 {
     for (auto i = 0; i < SIZE; i++)
-        os << v[i] << " ";
+        os << v[i] << " "; // Affiche chacun des nombres séparés par un espace
     return os;
 }
 
@@ -121,18 +121,18 @@ public:
     {
         return _SIZE;
     }
-    My_square_matrix() : mat_(new My_vector<_T, _SIZE>[_SIZE])
+    My_square_matrix() : mat_(new My_vector<_T, _SIZE>[_SIZE]) // Initialise le tableau de vecteurs
     {
     }
     ~My_square_matrix()
     {
         delete[] mat_; // Suppression du tableau (NE PAS OUBLIER LES CROCHETS)
     }
-    My_vector<_T, _SIZE> &operator[](const size_t &ind)
+    My_vector<_T, _SIZE> &operator[](const size_t &ind) // Accès au vecteur via référence
     {
         return mat_[ind];
     }
-    My_vector<_T, _SIZE> operator[](const size_t &ind) const
+    My_vector<_T, _SIZE> operator[](const size_t &ind) const // Copie du vecteur donné
     {
         return mat_[ind];
     }
@@ -176,7 +176,7 @@ template <typename T, size_t SIZE>
 std::ostream &operator<<(std::ostream &os, const My_square_matrix<T, SIZE> &v)
 {
     for (auto i = 0; i < SIZE; i++)
-        os << v.mat_[i] << " ";
+        os << v.mat_[i] << " "; // Affiche chacun des vecteurs, séparés par un espace
 
     return os;
 }
@@ -194,7 +194,7 @@ int main()
 
     std::sort(v.begin(), v.end(), Comp()); // Trie avec functor (on doit créer une instance de la structure pour pouvoir l'utiliser)
     std::sort(v.begin(), v.end(), comp);   // Trie avec une fonction
-    std::sort(v.begin(), v.end(), [&](int x, int y)
+    std::sort(v.begin(), v.end(), [](int x, int y)
               { return x < y; }); // Trie avec une fonction lambda
 
     // Effectue la somme du vecteur
